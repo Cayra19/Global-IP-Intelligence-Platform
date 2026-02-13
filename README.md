@@ -211,6 +211,6 @@ This project demonstrates:
 
 ## 🎥 Demo Video
 Watch full project walkthrough:
-[Project Demo Video]([YouTube_Link](https://youtu.be/LQ9Q8jT9Fhk))
+[Project Demo Video](https://youtu.be/LQ9Q8jT9Fhk)
 
 Demo covers login flow, dashboard analytics, IP search integration, patent filing, admin monitoring, and role-based access.
