@@ -16,7 +16,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin/subscriptions")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin
 public class AdminSubscriptionController {
 
     private final SubscriptionPlanRepository planRepository;

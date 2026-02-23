@@ -17,7 +17,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/patent-filings")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin
 @RequiredArgsConstructor
 public class PatentFilingController {
 

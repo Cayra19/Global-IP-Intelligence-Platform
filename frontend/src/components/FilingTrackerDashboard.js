@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8081';
+const BASE_URL = '';
 
 const FilingTrackerDashboard = () => {
   const navigate = useNavigate();
@@ -17,7 +17,7 @@ const FilingTrackerDashboard = () => {
         const token = localStorage.getItem('token');
         const headers = { 'Content-Type': 'application/json' };
         if (token) headers['Authorization'] = `Bearer ${token}`;
-        const resp = await fetch(`${BASE_URL}/api/filing-tracker/dashboard`, { credentials: 'include', headers });
+        const resp = await fetch(`${BASE_URL}/api/filing-tracker/dashboard`, { headers });
         if (resp.ok) {
           const data = await resp.json();
           setStats({ total: data.total, granted: data.granted, renewalDue: data.renewalDue, expired: data.expired });
@@ -26,22 +26,10 @@ const FilingTrackerDashboard = () => {
         if (r.ok) {
           const list = await r.json();
           setRecent(list.slice(0, 10));
-        } else {
-          // graceful fallback to some mocked examples when backend is not reachable
-          setRecent([
-            { id: 'r1', title: 'Smart Widget Controller', applicationNumber: 'IN2023/000123', currentStatus: 'Filed', filingDate: '2023-08-01', expiryDate: '2043-08-01', jurisdiction: 'IN', ipType: 'Patent' },
-            { id: 'r2', title: 'Adaptive Lens System', applicationNumber: 'IN2022/010987', currentStatus: 'Under Examination', filingDate: '2022-02-12', expiryDate: '2042-02-12', jurisdiction: 'IN', ipType: 'Patent' },
-            { id: 'r3', title: 'Energy Recovery Inverter', applicationNumber: 'IN2019/005555', currentStatus: 'Granted', filingDate: '2019-05-23', expiryDate: '2039-05-23', jurisdiction: 'IN', ipType: 'Patent' }
-          ]);
-        }
+        } 
         setLoadingRecent(false);
       } catch (e) {
         console.error('Failed to load filings', e);
-        setRecent([
-          { id: 'r1', title: 'Smart Widget Controller', applicationNumber: 'IN2023/000123', currentStatus: 'Filed', filingDate: '2023-08-01', expiryDate: '2043-08-01', jurisdiction: 'IN', ipType: 'Patent' },
-          { id: 'r2', title: 'Adaptive Lens System', applicationNumber: 'IN2022/010987', currentStatus: 'Under Examination', filingDate: '2022-02-12', expiryDate: '2042-02-12', jurisdiction: 'IN', ipType: 'Patent' },
-          { id: 'r3', title: 'Energy Recovery Inverter', applicationNumber: 'IN2019/005555', currentStatus: 'Granted', filingDate: '2019-05-23', expiryDate: '2039-05-23', jurisdiction: 'IN', ipType: 'Patent' }
-        ]);
         setLoadingRecent(false);
       }
     };

@@ -101,39 +101,37 @@ Generated from IP Portal
     ip?.pdfLink || (ip?.patentLink ? `${ip.patentLink}.pdf` : null);
   useEffect(() => {
     const fetchIPDetails = async () => {
-      if (!ip) {
-        try {
-          setLoading(true);
-          const data = await getIPDetails(id);
-          console.log("Fetched IP Details:", data);
-          // Map all fields including priorityDate, grantDate, and updatedOn
-          setIp({
-            ...data,
-            assignee: data.ownerName || data.assignee,
-            number: data.applicationNumber || data.number,
-            inventor: data.inventorName || data.inventor,
-            abstract: data.abstractText || data.abstract,
-            // Map jurisdiction/country
-            jurisdiction: data.country || data.jurisdiction,
-            // Ensure date fields are preserved
-            filingDate: data.filingDate,
-            publicationDate: data.publicationDate,
-            priorityDate: data.priorityDate,
-            grantDate: data.grantDate,
-            updatedOn: data.updatedOn,
-            // Ensure status is mapped
-            status: data.legalStatus || data.status,
-          });
-        } catch (err) {
-          setError("Failed to load IP details");
-          console.error(err);
-        } finally {
-          setLoading(false);
-        }
+      try {
+        setLoading(true);
+        const data = await getIPDetails(id);
+        console.log("Fetched IP Details:", data);
+        // Map all fields including priorityDate, grantDate, and updatedOn
+        setIp({
+          ...data,
+          assignee: data.ownerName || data.assignee,
+          number: data.applicationNumber || data.number,
+          inventor: data.inventorName || data.inventor,
+          abstract: data.abstractText || data.abstract,
+          // Map jurisdiction/country
+          jurisdiction: data.country || data.jurisdiction,
+          // Ensure date fields are preserved
+          filingDate: data.filingDate,
+          publicationDate: data.publicationDate,
+          priorityDate: data.priorityDate,
+          grantDate: data.grantDate,
+          updatedOn: data.updatedOn,
+          // Ensure status is mapped
+          status: data.legalStatus || data.status,
+        });
+      } catch (err) {
+        setError("Failed to load IP details");
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchIPDetails();
-  }, [id, ip]);
+    if (!initialState) fetchIPDetails();
+  }, [id]);
 
   useEffect(() => {
     if (ip) console.log("IP DETAILS FROM API:", ip);
@@ -271,7 +269,7 @@ Generated from IP Portal
             <button
               onClick={async () => {
                 try {
-                  const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8081';
+                  const BASE_URL = '';
                   const payload = {
                     title: ip.title,
                     abstractText: ip.abstract || ip.abstractText || null,

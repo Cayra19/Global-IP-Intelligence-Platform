@@ -48,7 +48,7 @@ const Login = () => {
     try {
       setLoading(true);
 
-      const res = await fetch("http://localhost:8081/auth/login", {
+      const res = await fetch("/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

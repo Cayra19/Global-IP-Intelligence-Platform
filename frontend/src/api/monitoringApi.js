@@ -1,9 +1,7 @@
 import axios from "axios";
 
-const BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8081";
-
 // Monitoring API base
-const MONITORING_BASE = `${BASE_URL}/api/admin/monitoring`;
+const MONITORING_BASE = `/api/admin/monitoring`;
 
 /**
  * INTEGRATED MONITORING DATA - Similar to IP Assets integration

@@ -26,9 +26,8 @@ const UIManagement = () => {
     const fetchSettings = async () => {
       try {
         const adminToken = localStorage.getItem('adminToken') || localStorage.getItem('token');
-        const BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8081";
-        
-        const res = await fetch(`${BASE_URL}/api/admin/ui/settings`, {
+
+        const res = await fetch(`/api/admin/ui/settings`, {
           headers: {
             'Authorization': `Bearer ${adminToken}`
           }
@@ -50,9 +49,8 @@ const UIManagement = () => {
   const saveSettings = async () => {
     try {
       const adminToken = localStorage.getItem('adminToken') || localStorage.getItem('token');
-      const BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8081";
-      
-      const res = await fetch(`${BASE_URL}/api/admin/ui/settings`, {
+
+      const res = await fetch(`/api/admin/ui/settings`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${adminToken}`,
@@ -82,9 +80,8 @@ const UIManagement = () => {
 
     try {
       const adminToken = localStorage.getItem('adminToken') || localStorage.getItem('token');
-      const BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8081";
-      
-      const res = await fetch(`${BASE_URL}/api/admin/ui/upload`, {
+
+      const res = await fetch(`/api/admin/ui/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${adminToken}`

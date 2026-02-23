@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8081';
-
 const FilingDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -18,7 +16,7 @@ const FilingDetail = () => {
         const token = localStorage.getItem('token');
         const headers = {};
         if (token) headers['Authorization'] = `Bearer ${token}`;
-        const resp = await fetch(`${BASE_URL}/api/filing-tracker/${id}`, { credentials: 'include', headers });
+        const resp = await fetch(`/api/filing-tracker/${id}`, {headers });
         if (!resp.ok) {
           setError('Filing not found');
           return;

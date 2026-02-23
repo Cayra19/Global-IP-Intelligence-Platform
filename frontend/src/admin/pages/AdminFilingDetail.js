@@ -65,7 +65,7 @@ const AdminFilingDetail = () => {
     const fetchFilingDetails = async () => {
         try {
             const token = localStorage.getItem("adminToken");
-            const res = await fetch(`http://localhost:8081/api/admin/patent-filings/${id}`, {
+           const res = await fetch(`/api/admin/patent-filings/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.ok) {

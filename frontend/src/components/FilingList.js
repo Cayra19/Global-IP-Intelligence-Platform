@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8081';
+const BASE_URL = '';
 
 const FilingList = () => {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ const FilingList = () => {
         const token = localStorage.getItem('token');
         const headers = { 'Content-Type': 'application/json' };
         if (token) headers['Authorization'] = `Bearer ${token}`;
-        const resp = await fetch(`${BASE_URL}/api/filing-tracker/my-filings`, { credentials: 'include', headers });
+        const resp = await fetch(`${BASE_URL}/api/filing-tracker/my-filings`, { headers });
         if (resp.ok) setFilings(await resp.json());
       } catch (e) {
         console.error('Failed to load filings', e);

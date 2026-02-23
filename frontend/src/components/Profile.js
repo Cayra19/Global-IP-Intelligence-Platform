@@ -71,7 +71,7 @@ const Profile = () => {
   // ---------------- LOAD PROFILE ----------------
   const loadProfile = async () => {
     try {
-      const response = await fetch("http://localhost:8081/api/users/me", {
+      const response = await fetch("/api/users/me", {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -135,7 +135,7 @@ const Profile = () => {
     // ------------ UPDATE PROFILE API -----------
     try {
       const res = await fetch(
-        "http://localhost:8081/api/users/update-profile",
+        "/api/users/update-profile",
         {
           method: "PUT",
           headers: {
@@ -182,7 +182,7 @@ const Profile = () => {
 
       try {
         const pwdRes = await fetch(
-          "http://localhost:8081/api/users/change-password",
+          "/api/users/change-password",
           {
             method: "PUT",
             headers: {

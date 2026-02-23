@@ -26,15 +26,22 @@ const AdminFinanceManagement = () => {
   });
   const [newFeature, setNewFeature] = useState("");
 
-  const API_BASE = "http://localhost:8081/api/admin/subscriptions";
+  const API_BASE = "/api/admin/subscriptions";
+
+  const getAuthConfig = () => {
+    const token = localStorage.getItem("adminToken");
+    return token
+      ? { headers: { Authorization: `Bearer ${token}` } }
+      : {};
+  };
 
   const fetchAllData = async () => {
     try {
       setLoading(true);
       const [plansRes, historyRes, statsRes] = await Promise.all([
-        axios.get(`${API_BASE}/plans`),
-        axios.get(`${API_BASE}/history`),
-        axios.get(`${API_BASE}/stats`)
+        axios.get(`${API_BASE}/plans`, getAuthConfig()),
+        axios.get(`${API_BASE}/history`, getAuthConfig()),
+        axios.get(`${API_BASE}/stats`, getAuthConfig())
       ]);
       setPlans(plansRes.data);
       setHistory(historyRes.data);
@@ -52,7 +59,7 @@ const AdminFinanceManagement = () => {
 
   const handleSavePlan = async () => {
     try {
-      await axios.post(`${API_BASE}/plans`, currentPlan);
+      await axios.post(`${API_BASE}/plans`, currentPlan, getAuthConfig());
       setShowPlanModal(false);
       fetchAllData();
     } catch (error) {
@@ -64,7 +71,7 @@ const AdminFinanceManagement = () => {
   const handleDeletePlan = async (id) => {
     if (!window.confirm("Are you sure you want to delete this plan?")) return;
     try {
-      await axios.delete(`${API_BASE}/plans/${id}`);
+      await axios.delete(`${API_BASE}/plans/${id}`, getAuthConfig());
       fetchAllData();
     } catch (error) {
       console.error("Error deleting plan:", error);
@@ -124,7 +131,7 @@ const AdminFinanceManagement = () => {
         {/* Header */}
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-white">Subscription Management</h1>
-          <button 
+          <button
             onClick={openAddModal}
             className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-white"
           >
@@ -138,11 +145,10 @@ const AdminFinanceManagement = () => {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`pb-3 capitalize transition-all ${
-                activeTab === tab
+              className={`pb-3 capitalize transition-all ${activeTab === tab
                   ? "text-blue-400 border-b-2 border-blue-400"
                   : "text-gray-400 hover:text-white"
-              }`}
+                }`}
             >
               {tab}
             </button>
@@ -163,8 +169,8 @@ const AdminFinanceManagement = () => {
                 className="bg-[#161b22] border border-[#30363d] rounded-lg p-4 hover:border-blue-500/50 transition-all cursor-default"
               >
                 <div className="flex items-center gap-2 mb-1">
-                    <span>{icon}</span>
-                    <p className="text-gray-400 text-sm">{label}</p>
+                  <span>{icon}</span>
+                  <p className="text-gray-400 text-sm">{label}</p>
                 </div>
                 <p className="text-2xl font-bold text-white">{value}</p>
               </div>
@@ -203,13 +209,13 @@ const AdminFinanceManagement = () => {
                 </div>
 
                 <div className="flex gap-2 mt-6 pt-4 border-t border-[#30363d]">
-                  <button 
+                  <button
                     onClick={() => openEditModal(plan)}
                     className="flex-1 bg-gray-700 hover:bg-gray-600 rounded text-white text-sm py-1.5 transition-colors"
                   >
                     Edit
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleDeletePlan(plan.id)}
                     className="flex-1 bg-red-900/50 hover:bg-red-800 text-red-300 rounded text-sm py-1.5 transition-colors"
                   >
@@ -239,12 +245,12 @@ const AdminFinanceManagement = () => {
                 {history.map((r) => (
                   <tr key={r.id} className="hover:bg-[#21262d] transition-colors">
                     <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold">
-                                {r.userName ? r.userName.charAt(0) : "U"}
-                            </div>
-                            <span className="text-white font-medium">{r.userName}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold">
+                          {r.userName ? r.userName.charAt(0) : "U"}
                         </div>
+                        <span className="text-white font-medium">{r.userName}</span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-gray-400">{r.oldPlan}</td>
                     <td className="px-6 py-4 font-semibold text-blue-400">{r.newPlan}</td>
@@ -254,7 +260,7 @@ const AdminFinanceManagement = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-gray-300 text-sm">
-                        {new Date(r.createdAt).toLocaleDateString()}
+                      {new Date(r.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 text-white font-mono">
                       ${r.amount}
@@ -262,9 +268,9 @@ const AdminFinanceManagement = () => {
                   </tr>
                 ))}
                 {history.length === 0 && (
-                    <tr>
-                        <td colSpan="6" className="px-6 py-10 text-center text-gray-500">No recent activity found.</td>
-                    </tr>
+                  <tr>
+                    <td colSpan="6" className="px-6 py-10 text-center text-gray-500">No recent activity found.</td>
+                  </tr>
                 )}
               </tbody>
             </table>
@@ -282,14 +288,14 @@ const AdminFinanceManagement = () => {
                   <AreaChart data={stats.revenueTrends}>
                     <defs>
                       <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
                     <XAxis dataKey="name" stroke="#8b949e" fontSize={12} tickLine={false} axisLine={false} />
                     <YAxis stroke="#8b949e" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v}`} />
-                    <Tooltip 
+                    <Tooltip
                       contentStyle={{ backgroundColor: '#161b22', border: '1px solid #30363d', borderRadius: '8px' }}
                       itemStyle={{ color: '#3b82f6' }}
                     />
@@ -318,10 +324,10 @@ const AdminFinanceManagement = () => {
                         <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip 
-                        contentStyle={{ backgroundColor: '#161b22', border: '1px solid #30363d', borderRadius: '8px' }}
+                    <Tooltip
+                      contentStyle={{ backgroundColor: '#161b22', border: '1px solid #30363d', borderRadius: '8px' }}
                     />
-                    <Legend verticalAlign="bottom" height={36}/>
+                    <Legend verticalAlign="bottom" height={36} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -351,13 +357,13 @@ const AdminFinanceManagement = () => {
                   />
                 </div>
                 <div>
-                    <label className="text-xs text-gray-400 uppercase font-bold mb-1 block">Monthly Price ($)</label>
-                    <input
-                        type="number"
-                        className="w-full bg-[#0d1117] border border-[#30363d] px-4 py-2 rounded-lg text-white focus:border-blue-500 outline-none"
-                        value={currentPlan.price}
-                        onChange={(e) => setCurrentPlan({ ...currentPlan, price: parseFloat(e.target.value) })}
-                    />
+                  <label className="text-xs text-gray-400 uppercase font-bold mb-1 block">Monthly Price ($)</label>
+                  <input
+                    type="number"
+                    className="w-full bg-[#0d1117] border border-[#30363d] px-4 py-2 rounded-lg text-white focus:border-blue-500 outline-none"
+                    value={currentPlan.price}
+                    onChange={(e) => setCurrentPlan({ ...currentPlan, price: parseFloat(e.target.value) })}
+                  />
                 </div>
               </div>
 
@@ -371,7 +377,7 @@ const AdminFinanceManagement = () => {
                     onChange={(e) => setNewFeature(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && addFeature()}
                   />
-                  <button 
+                  <button
                     onClick={addFeature}
                     className="bg-blue-600 px-4 py-2 rounded-lg text-white font-bold"
                   >
@@ -390,24 +396,24 @@ const AdminFinanceManagement = () => {
               </div>
 
               <div className="flex items-center gap-6 py-2">
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                      <input 
-                        type="checkbox" 
-                        className="w-4 h-4 rounded border-[#30363d] bg-[#0d1117] text-blue-600 focus:ring-blue-500"
-                        checked={currentPlan.popular}
-                        onChange={(e) => setCurrentPlan({ ...currentPlan, popular: e.target.checked })}
-                      />
-                      <span className="text-sm text-gray-300 group-hover:text-white transition-colors">Mark as Popular</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                      <input 
-                        type="checkbox" 
-                        className="w-4 h-4 rounded border-[#30363d] bg-[#0d1117] text-blue-600 focus:ring-blue-500"
-                        checked={currentPlan.active}
-                        onChange={(e) => setCurrentPlan({ ...currentPlan, active: e.target.checked })}
-                      />
-                      <span className="text-sm text-gray-300 group-hover:text-white transition-colors">Active Plan</span>
-                  </label>
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 rounded border-[#30363d] bg-[#0d1117] text-blue-600 focus:ring-blue-500"
+                    checked={currentPlan.popular}
+                    onChange={(e) => setCurrentPlan({ ...currentPlan, popular: e.target.checked })}
+                  />
+                  <span className="text-sm text-gray-300 group-hover:text-white transition-colors">Mark as Popular</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 rounded border-[#30363d] bg-[#0d1117] text-blue-600 focus:ring-blue-500"
+                    checked={currentPlan.active}
+                    onChange={(e) => setCurrentPlan({ ...currentPlan, active: e.target.checked })}
+                  />
+                  <span className="text-sm text-gray-300 group-hover:text-white transition-colors">Active Plan</span>
+                </label>
               </div>
             </div>
 

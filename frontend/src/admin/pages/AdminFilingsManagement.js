@@ -6,8 +6,8 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend 
 } from 'recharts';
 
-const API_URL = "http://localhost:8081/api/admin/patent-filings";
-const BASE_URL = "http://localhost:8081";
+const API_URL = "/api/admin/patent-filings";
+const BASE_URL = "";
 
 const AdminFilingsManagement = () => {
   const [activeTab, setActiveTab] = useState("filings");
@@ -70,11 +70,10 @@ const AdminFilingsManagement = () => {
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem("adminToken");
-    return {
+    return token ? {
       headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
+        Authorization: `Bearer ${token}`
+      } } : {};
   };
 
   const fetchFilings = async () => {

@@ -26,8 +26,8 @@ export const AdminUIProvider = ({ children }) => {
                 return;
             }
 
-            const BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8081";
-            const res = await fetch(`${BASE_URL}/api/admin/ui/settings`, {
+            const BASE_URL = "";
+            const res = await fetch(`/api/admin/ui/settings`, {
                 headers: { 'Authorization': `Bearer ${adminToken}` }
             });
             if (res.ok) {

@@ -19,7 +19,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/filing-tracker")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin
 public class FilingTrackerController {
 
     private final FilingTrackerService service;

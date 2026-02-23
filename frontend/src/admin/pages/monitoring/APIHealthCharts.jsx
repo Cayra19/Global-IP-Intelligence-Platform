@@ -10,8 +10,6 @@ const APIHealthCharts = () => {
   const [trafficData, setTrafficData] = useState([]);
   const [responseData, setResponseData] = useState([]);
 
-  const API_URL = "http://localhost:8081/api/admin/monitoring/health";
-
   // Generate mock data for charts
   const generateMockData = () => {
     const now = new Date();
@@ -48,7 +46,7 @@ const APIHealthCharts = () => {
       setStats(monitoringData.systemHealth || {});
       const trafficChartData = monitoringData.chartData?.traffic || [];
       const responseChartData = monitoringData.chartData?.responsePerformance || [];
-      
+
       setTrafficData(trafficChartData.length > 0 ? trafficChartData : generateMockTrafficData());
       setResponseData(responseChartData.length > 0 ? responseChartData : generateMockResponseData());
     } catch (error) {
@@ -106,11 +104,17 @@ const APIHealthCharts = () => {
 
   // Use stats if available, else defaults
   const metrics = stats ? {
-    uptime: stats.uptime,
-    responseTime: stats.responseTimeMs ? `${stats.responseTimeMs.toFixed(0)} ms` : '0 ms',
-    requestsPerMinute: stats.requestsPerMinute,
-    errorRate: stats.errorRatePercent ? `${stats.errorRatePercent.toFixed(2)}%` : '0%',
-    totalRequests: stats.totalRequests.toLocaleString()
+    uptime: stats.uptime || "N/A",
+    responseTime: stats.responseTimeMs
+      ? `${stats.responseTimeMs.toFixed(0)} ms`
+      : "0 ms",
+    requestsPerMinute: stats.requestsPerMinute ?? 0,
+    errorRate: stats.errorRatePercent
+      ? `${stats.errorRatePercent.toFixed(2)}%`
+      : "0%",
+    totalRequests: stats.totalRequests
+      ? stats.totalRequests.toLocaleString()
+      : "0"
   } : {};
 
   const endpoints = stats && stats.endpoints ? Object.values(stats.endpoints) : [];

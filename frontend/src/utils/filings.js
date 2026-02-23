@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8081/api/patent-filings';
+const API_BASE_URL = '/api/patent-filings';
 
 function getAuthHeaders() {
   const token = localStorage.getItem('token');

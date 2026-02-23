@@ -21,16 +21,17 @@ const AdminUserManagement = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    role: "User",
+    role: "USER",
     status: "Active",
     subscription: "Free"
   });
 
-  const API_URL = "http://localhost:8081/api/admin/users";
+  const API_URL = "/api/admin/users";
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem("adminToken");
-    return { headers: { Authorization: `Bearer ${token}` } };
+    return token
+      ? { headers: { Authorization: `Bearer ${token}` } } : {};
   };
 
   const fetchUsers = async () => {
@@ -39,6 +40,11 @@ const AdminUserManagement = () => {
       // Map basic fields if needed, but the backend now returns everything we need
       setUsers(response.data);
     } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem("adminToken");
+        window.location.href = "/admin/login";
+        return;
+      }
       console.error("Error fetching users:", error);
     } finally {
       setLoading(false);
@@ -54,7 +60,7 @@ const AdminUserManagement = () => {
     setFormData({
       name: "",
       email: "",
-      role: "User",
+      role: "USER",
       status: "Active",
       subscription: "Free"
     });
@@ -69,7 +75,7 @@ const AdminUserManagement = () => {
       name: user.name || "",
       email: user.email || "",
       // Map backend values if they differ, or rely on consistency
-      role: user.role || "User",
+      role: user.role || "USER",
       status: user.status || "Active",
       subscription: user.subscription || "Free"
     });
@@ -96,6 +102,11 @@ const AdminUserManagement = () => {
       setShowModal(false);
       fetchUsers();
     } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem("adminToken");
+        window.location.href = "/admin/login";
+        return;
+      }
       console.error("Error saving user:", error);
       alert("Failed to save user");
     }
@@ -297,11 +308,10 @@ const AdminUserManagement = () => {
 
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <span className={`h-2 w-2 rounded-full ${
-                        (u.status || "").toLowerCase() === "active" ? "bg-green-500" :
+                      <span className={`h-2 w-2 rounded-full ${(u.status || "").toLowerCase() === "active" ? "bg-green-500" :
                         (u.status || "").toLowerCase() === "inactive" ? "bg-orange-500" :
-                        "bg-red-500"
-                      }`}></span>
+                          "bg-red-500"
+                        }`}></span>
                       <span className={`px-3 py-1 text-xs rounded-full font-medium ${badge[u.status] || badge.Active}`}>
                         {u.status || "Active"}
                       </span>
@@ -463,7 +473,7 @@ const AdminUserManagement = () => {
                     <p className="text-white"><span className="text-gray-400">Name:</span> {selectedUserForSub.name || "N/A"}</p>
                     <p className="text-white"><span className="text-gray-400">Email:</span> {selectedUserForSub.email}</p>
                     <p className="text-white"><span className="text-gray-400">Role:</span> {selectedUserForSub.role}</p>
-                    <p className="text-white"><span className="text-gray-400">Status:</span> 
+                    <p className="text-white"><span className="text-gray-400">Status:</span>
                       <span className={`ml-2 px-2 py-1 text-xs rounded-full ${badge[selectedUserForSub.status] || badge.Active}`}>
                         {selectedUserForSub.status}
                       </span>
@@ -475,13 +485,13 @@ const AdminUserManagement = () => {
                 <div className="space-y-3">
                   <h3 className="text-sm font-semibold text-gray-300 uppercase">Subscription Information</h3>
                   <div className="bg-[#161b22] rounded-lg p-4 space-y-2">
-                    <p className="text-white"><span className="text-gray-400">Plan:</span> 
+                    <p className="text-white"><span className="text-gray-400">Plan:</span>
                       <span className={`ml-2 px-3 py-1 text-xs rounded-full font-semibold ${badge[selectedUserForSub.subscription] || badge.Free}`}>
                         {selectedUserForSub.subscription || "Free"}
                       </span>
                     </p>
                     <p className="text-white"><span className="text-gray-400">Member Since:</span> {selectedUserForSub.createdAt ? new Date(selectedUserForSub.createdAt).toLocaleDateString() : "N/A"}</p>
-                    
+
                     {/* Subscription Benefits */}
                     <div className="mt-4 pt-4 border-t border-[#30363d]">
                       <p className="text-gray-400 text-xs uppercase mb-2">Benefits</p>
@@ -524,9 +534,9 @@ const AdminUserManagement = () => {
                   Close
                 </button>
                 <button
-                  onClick={() => { 
-                    openEditModal(selectedUserForSub); 
-                    setShowSubscriptionModal(false); 
+                  onClick={() => {
+                    openEditModal(selectedUserForSub);
+                    setShowSubscriptionModal(false);
                   }}
                   className="flex-1 bg-blue-600 hover:bg-blue-700 rounded-lg text-white py-2"
                 >
@@ -536,7 +546,7 @@ const AdminUserManagement = () => {
             </div>
           </div>
         )}
-        </div>
+      </div>
     </AdminLayout>
   );
 };
