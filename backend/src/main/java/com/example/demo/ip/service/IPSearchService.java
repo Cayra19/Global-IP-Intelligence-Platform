@@ -26,12 +26,12 @@ public class IPSearchService {
     private static final int PAGE_SIZE = 20;
 
     private final ExternalPatentClient externalPatentClient;
-
     private final IPAssetRepository repository;
     private final com.example.demo.monitoring.MonitoringService monitoringService;
 
     public IPSearchResultDTO getIPDetails(Long id) {
         monitoringService.recordPatentView();
+
         IPAsset asset = repository.findById(id)
                 .orElseThrow(() -> new IPAssetNotFoundException("IP Asset not found with id: " + id));
 
@@ -39,7 +39,9 @@ public class IPSearchService {
     }
 
     public List<IPSearchResultDTO> search(IPSearchRequest request) {
+
         monitoringService.recordSearch();
+
         if (request == null || request.getQuery() == null || request.getQuery().isBlank()) {
             return List.of();
         }
@@ -47,86 +49,85 @@ public class IPSearchService {
         String query = request.getQuery().trim();
         String source = request.getSource() == null ? "EXTERNAL" : request.getSource().trim();
 
+        // LOCAL SEARCH
         if ("LOCAL".equalsIgnoreCase(source)) {
-            log.info("Fetching data from LOCAL DATABASE");
+
             List<IPAsset> cachedAssets = repository
                     .findByTitleContainingIgnoreCaseOrApplicationNumberContainingIgnoreCase(query, query);
 
-            if (cachedAssets.isEmpty())
+            if (cachedAssets.isEmpty()) {
                 return List.of();
+            }
 
-            return cachedAssets.stream().map(this::mapToDTO).toList();
-        }
-
-        log.info("Fetching data from GOOGLE PATENTS (SerpAPI)");
-        List<IPSearchResultDTO> results = new ArrayList<>();
-        for (int page = 0; page < 3; page++) {
-            List<IPSearchResultDTO> pageResults = externalPatentClient.searchPatents(query, PAGE_SIZE);
-            if (pageResults == null || pageResults.isEmpty())
-                break;
-            results.addAll(pageResults);
-        }
-
-        if (results.isEmpty()) {
-            // Fallback to local
-            return repository.findByTitleContainingIgnoreCase(query, PageRequest.of(0, PAGE_SIZE))
-                    .getContent().stream()
+            return cachedAssets.stream()
                     .map(this::mapToDTO)
                     .toList();
         }
 
-        // Cache External Results
-        List<IPAsset> assets = results.stream()
-                .map(this::mapToEntity)
-                .filter(asset -> asset.getApplicationNumber() != null)
-                .toList();
+        // EXTERNAL SEARCH
+        List<IPSearchResultDTO> results = new ArrayList<>();
 
-        List<IPAsset> savedAssets = new ArrayList<>();
+        for (int page = 0; page < 3; page++) {
 
-        for (IPAsset asset : assets) {
-            try {
-                savedAssets.add(repository.save(asset));
-            } catch (org.springframework.dao.DataIntegrityViolationException e) {
-                log.debug("Patent already exists: {}", asset.getApplicationNumber());
+            List<IPSearchResultDTO> pageResults = externalPatentClient.searchPatents(query, PAGE_SIZE);
+
+            if (pageResults == null || pageResults.isEmpty()) {
+                break;
+            }
+
+            results.addAll(pageResults);
+        }
+
+        if (results.isEmpty()) {
+            return repository
+                    .findByTitleContainingIgnoreCase(query, PageRequest.of(0, PAGE_SIZE))
+                    .getContent()
+                    .stream()
+                    .map(this::mapToDTO)
+                    .toList();
+        }
+
+        // SAFE CACHE
+        for (IPSearchResultDTO dto : results) {
+
+            if (dto.getApplicationNumber() == null) {
+                continue;
+            }
+
+            IPAsset existing = repository.findByApplicationNumber(dto.getApplicationNumber()).orElse(null);
+
+            if (existing == null) {
+
+                try {
+                    IPAsset saved = repository.save(mapToEntity(dto));
+
+                    dto.setId(saved.getId());
+                    dto.setLegalStatus(saved.getLegalStatus());
+                    dto.setUpdatedOn(saved.getUpdatedOn() != null
+                            ? saved.getUpdatedOn().toString()
+                            : null);
+
+                } catch (org.springframework.dao.DataIntegrityViolationException e) {
+                    log.debug("Patent already exists: {}", dto.getApplicationNumber());
+                }
+
+            } else {
+
+                dto.setId(existing.getId());
+                dto.setLegalStatus(existing.getLegalStatus());
+                dto.setUpdatedOn(existing.getUpdatedOn() != null
+                        ? existing.getUpdatedOn().toString()
+                        : null);
             }
         }
-        // Sync DTOs with saved IDs and data
-        for (IPSearchResultDTO dto : results) {
-            savedAssets.stream()
-                    .filter(s -> s.getApplicationNumber() != null
-                            && s.getApplicationNumber().equals(dto.getApplicationNumber()))
-                    .findFirst()
-                    .ifPresent(s -> {
-                        dto.setId(s.getId());
-                        dto.setUpdatedOn(s.getUpdatedOn() != null ? s.getUpdatedOn().toString() : null);
-                    });
 
-            // Ensure status logic for display match the saved entity logic
-            String legalStatus = deriveStatus(
-                    dto.getFilingDate() != null ? parseDate(dto.getFilingDate()) : null,
-                    dto.getGrantDate() != null ? parseDate(dto.getGrantDate()) : null);
-            dto.setLegalStatus(legalStatus);
-        }
-    }else
-
-    {
-        // For results that already existed
-        for (IPSearchResultDTO dto : results) {
-            if (dto.getId() == null && dto.getApplicationNumber() != null) {
-                repository.findByApplicationNumber(dto.getApplicationNumber()).ifPresent(existing -> {
-                    dto.setId(existing.getId());
-                    dto.setLegalStatus(existing.getLegalStatus());
-                    dto.setUpdatedOn(existing.getUpdatedOn() != null ? existing.getUpdatedOn().toString() : null);
-                });
-            }
-        }
-    }
-
-    return results;
+        return results;
     }
 
     private IPSearchResultDTO mapToDTO(IPAsset asset) {
+
         IPSearchResultDTO dto = new IPSearchResultDTO();
+
         dto.setId(asset.getId());
         dto.setTitle(asset.getTitle());
         dto.setApplicationNumber(asset.getApplicationNumber());
@@ -145,11 +146,14 @@ public class IPSearchService {
         dto.setPatentLink(asset.getPatentLink());
         dto.setPdfLink(asset.getPdfLink());
         dto.setThumbnail(asset.getThumbnail());
+
         return dto;
     }
 
     private IPAsset mapToEntity(IPSearchResultDTO dto) {
+
         IPAsset asset = new IPAsset();
+
         asset.setTitle(dto.getTitle());
         asset.setAssetType(dto.getAssetType());
         asset.setApplicationNumber(dto.getApplicationNumber());
@@ -167,13 +171,18 @@ public class IPSearchService {
         asset.setPatentLink(dto.getPatentLink());
         asset.setPdfLink(dto.getPdfLink());
         asset.setThumbnail(dto.getThumbnail());
-        
+
         asset.setLegalStatus(deriveStatus(asset.getFilingDate(), asset.getGrantDate()));
+
         return asset;
     }
 
     private LocalDate parseDate(String dateStr) {
-        if (dateStr == null || dateStr.trim().isEmpty()) return null;
+
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            return null;
+        }
+
         try {
             return LocalDate.parse(dateStr);
         } catch (Exception e) {
@@ -182,8 +191,12 @@ public class IPSearchService {
     }
 
     private String deriveStatus(LocalDate filing, LocalDate grant) {
-        if (grant != null) return "GRANTED";
-        if (filing != null && filing.plusYears(20).isBefore(LocalDate.now())) return "EXPIRED";
+
+        if (grant != null)
+            return "GRANTED";
+        if (filing != null && filing.plusYears(20).isBefore(LocalDate.now()))
+            return "EXPIRED";
+
         return "FILED";
     }
 }
