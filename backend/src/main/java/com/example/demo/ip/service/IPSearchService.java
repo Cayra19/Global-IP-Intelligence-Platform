@@ -43,15 +43,17 @@ public class IPSearchService {
         if (request == null || request.getQuery() == null || request.getQuery().isBlank()) {
             return List.of();
         }
-        
+
         String query = request.getQuery().trim();
         String source = request.getSource() == null ? "EXTERNAL" : request.getSource().trim();
 
         if ("LOCAL".equalsIgnoreCase(source)) {
             log.info("Fetching data from LOCAL DATABASE");
-            List<IPAsset> cachedAssets = repository.findByTitleContainingIgnoreCaseOrApplicationNumberContainingIgnoreCase(query, query);
-            
-            if (cachedAssets.isEmpty()) return List.of();
+            List<IPAsset> cachedAssets = repository
+                    .findByTitleContainingIgnoreCaseOrApplicationNumberContainingIgnoreCase(query, query);
+
+            if (cachedAssets.isEmpty())
+                return List.of();
 
             return cachedAssets.stream().map(this::mapToDTO).toList();
         }
@@ -60,13 +62,14 @@ public class IPSearchService {
         List<IPSearchResultDTO> results = new ArrayList<>();
         for (int page = 0; page < 3; page++) {
             List<IPSearchResultDTO> pageResults = externalPatentClient.searchPatents(query, PAGE_SIZE);
-            if (pageResults == null || pageResults.isEmpty()) break;
+            if (pageResults == null || pageResults.isEmpty())
+                break;
             results.addAll(pageResults);
         }
 
         if (results.isEmpty()) {
-             // Fallback to local
-             return repository.findByTitleContainingIgnoreCase(query, PageRequest.of(0, PAGE_SIZE))
+            // Fallback to local
+            return repository.findByTitleContainingIgnoreCase(query, PageRequest.of(0, PAGE_SIZE))
                     .getContent().stream()
                     .map(this::mapToDTO)
                     .toList();
@@ -75,44 +78,53 @@ public class IPSearchService {
         // Cache External Results
         List<IPAsset> assets = results.stream()
                 .map(this::mapToEntity)
-                .filter(asset -> asset.getApplicationNumber() != null && !repository.existsByApplicationNumber(asset.getApplicationNumber()))
+                .filter(asset -> asset.getApplicationNumber() != null)
                 .toList();
-        
-        if (!assets.isEmpty()) {
-            List<IPAsset> savedAssets = repository.saveAll(assets);
-            // Sync DTOs with saved IDs and data
-            for (IPSearchResultDTO dto : results) {
-                 savedAssets.stream()
-                     .filter(s -> s.getApplicationNumber() != null && s.getApplicationNumber().equals(dto.getApplicationNumber()))
-                     .findFirst()
-                     .ifPresent(s -> {
-                         dto.setId(s.getId());
-                         dto.setUpdatedOn(s.getUpdatedOn() != null ? s.getUpdatedOn().toString() : null);
-                     });
-                 
-                 // Ensure status logic for display match the saved entity logic
-                 String legalStatus = deriveStatus(
-                     dto.getFilingDate() != null ? parseDate(dto.getFilingDate()) : null,
-                     dto.getGrantDate() != null ? parseDate(dto.getGrantDate()) : null
-                 );
-                 dto.setLegalStatus(legalStatus);
+
+        List<IPAsset> savedAssets = new ArrayList<>();
+
+        for (IPAsset asset : assets) {
+            try {
+                savedAssets.add(repository.save(asset));
+            } catch (org.springframework.dao.DataIntegrityViolationException e) {
+                log.debug("Patent already exists: {}", asset.getApplicationNumber());
             }
-        } else {
-             // For results that already existed
-             for (IPSearchResultDTO dto : results) {
-                 if (dto.getId() == null && dto.getApplicationNumber() != null) {
-                     repository.findByApplicationNumber(dto.getApplicationNumber()).ifPresent(existing -> {
-                         dto.setId(existing.getId());
-                         dto.setLegalStatus(existing.getLegalStatus());
-                         dto.setUpdatedOn(existing.getUpdatedOn() != null ? existing.getUpdatedOn().toString() : null);
-                     });
-                 }
-             }
         }
-        
-        return results;
+        // Sync DTOs with saved IDs and data
+        for (IPSearchResultDTO dto : results) {
+            savedAssets.stream()
+                    .filter(s -> s.getApplicationNumber() != null
+                            && s.getApplicationNumber().equals(dto.getApplicationNumber()))
+                    .findFirst()
+                    .ifPresent(s -> {
+                        dto.setId(s.getId());
+                        dto.setUpdatedOn(s.getUpdatedOn() != null ? s.getUpdatedOn().toString() : null);
+                    });
+
+            // Ensure status logic for display match the saved entity logic
+            String legalStatus = deriveStatus(
+                    dto.getFilingDate() != null ? parseDate(dto.getFilingDate()) : null,
+                    dto.getGrantDate() != null ? parseDate(dto.getGrantDate()) : null);
+            dto.setLegalStatus(legalStatus);
+        }
+    }else
+
+    {
+        // For results that already existed
+        for (IPSearchResultDTO dto : results) {
+            if (dto.getId() == null && dto.getApplicationNumber() != null) {
+                repository.findByApplicationNumber(dto.getApplicationNumber()).ifPresent(existing -> {
+                    dto.setId(existing.getId());
+                    dto.setLegalStatus(existing.getLegalStatus());
+                    dto.setUpdatedOn(existing.getUpdatedOn() != null ? existing.getUpdatedOn().toString() : null);
+                });
+            }
+        }
     }
-    
+
+    return results;
+    }
+
     private IPSearchResultDTO mapToDTO(IPAsset asset) {
         IPSearchResultDTO dto = new IPSearchResultDTO();
         dto.setId(asset.getId());
