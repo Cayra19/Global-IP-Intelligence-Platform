@@ -48,7 +48,7 @@ const AdminLogin = () => {
     try {
       setLoading(true);
 
-      const res = await fetch("/auth/admin/login", {
+      const res = await fetch("/api/auth/admin/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
