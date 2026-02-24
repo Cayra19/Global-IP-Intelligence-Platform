@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/admin/ui")
-@CrossOrigin(allowCredentials = "true")
+@CrossOrigin
 public class AdminUIManagementController {
 
     private final AdminUIService service;
