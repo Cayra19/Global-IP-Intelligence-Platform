@@ -5,9 +5,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Set;
 import java.util.Optional;
 
 @Repository
@@ -25,6 +27,8 @@ public interface IPAssetRepository extends JpaRepository<IPAsset, Long> {
 
         List<IPAsset> findByTitleContainingIgnoreCase(String keyword);
 
+        List<IPAsset> findByApplicationNumberIn(Set<String> applicationNumbers);
+
         List<IPAsset> findByTitleContainingIgnoreCaseOrApplicationNumberContainingIgnoreCase(
                         String title,
                         String applicationNumber);
@@ -39,9 +43,18 @@ public interface IPAssetRepository extends JpaRepository<IPAsset, Long> {
         Page<IPAsset> findByCountryAndAssetType(String country, String assetType, Pageable pageable);
 
         boolean existsByApplicationNumber(String applicationNumber);
-        
+
         Optional<IPAsset> findByApplicationNumber(String applicationNumber);
 
         @Query("SELECT i.country, COUNT(i) FROM IPAsset i GROUP BY i.country")
         List<Object[]> countByJurisdiction();
+
+        // Local search
+        @Query("""
+                            SELECT p FROM IPAsset p
+                            WHERE LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                               OR LOWER(p.abstractText) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                               OR LOWER(p.applicationNumber) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                        """)
+        List<IPAsset> searchByKeyword(@Param("keyword") String keyword);
 }

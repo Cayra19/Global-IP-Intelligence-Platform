@@ -3,6 +3,7 @@ package com.example.demo.ip.service;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,16 +51,18 @@ public class IPSearchService {
         String source = request.getSource() == null ? "EXTERNAL" : request.getSource().trim();
 
         // LOCAL SEARCH
+
         if ("LOCAL".equalsIgnoreCase(source)) {
 
             List<IPAsset> cachedAssets = repository
-                    .findByTitleContainingIgnoreCaseOrApplicationNumberContainingIgnoreCase(query, query);
+                    .searchByKeyword(query);
 
             if (cachedAssets.isEmpty()) {
                 return List.of();
             }
 
             return cachedAssets.stream()
+                    .limit(60)
                     .map(this::mapToDTO)
                     .toList();
         }
@@ -69,7 +72,9 @@ public class IPSearchService {
 
         for (int page = 0; page < 3; page++) {
 
-            List<IPSearchResultDTO> pageResults = externalPatentClient.searchPatents(query, PAGE_SIZE);
+            int start = page * PAGE_SIZE;
+
+            List<IPSearchResultDTO> pageResults = externalPatentClient.searchPatents(query, PAGE_SIZE, start);
 
             if (pageResults == null || pageResults.isEmpty()) {
                 break;
@@ -88,15 +93,23 @@ public class IPSearchService {
         }
 
         // SAFE CACHE
+        Set<String> appNumbers = results.stream()
+                .map(IPSearchResultDTO::getApplicationNumber)
+                .collect(Collectors.toSet());
+
+        List<IPAsset> existingAssets = repository.findByApplicationNumberIn(appNumbers);
+
+        Set<String> existingNumbers = existingAssets.stream()
+                .map(IPAsset::getApplicationNumber)
+                .collect(Collectors.toSet());
+
         for (IPSearchResultDTO dto : results) {
 
             if (dto.getApplicationNumber() == null) {
                 continue;
             }
 
-            IPAsset existing = repository.findByApplicationNumber(dto.getApplicationNumber()).orElse(null);
-
-            if (existing == null) {
+            if (!existingNumbers.contains(dto.getApplicationNumber())) {
 
                 try {
                     IPAsset saved = repository.save(mapToEntity(dto));
@@ -112,12 +125,14 @@ public class IPSearchService {
                 }
 
             } else {
+                IPAsset existing = existingAssets.stream()
+                        .filter(a -> a.getApplicationNumber().equals(dto.getApplicationNumber()))
+                        .findFirst()
+                        .orElse(null);
 
-                dto.setId(existing.getId());
-                dto.setLegalStatus(existing.getLegalStatus());
-                dto.setUpdatedOn(existing.getUpdatedOn() != null
-                        ? existing.getUpdatedOn().toString()
-                        : null);
+                if (existing != null) {
+                    dto.setId(existing.getId());
+                }
             }
         }
 
