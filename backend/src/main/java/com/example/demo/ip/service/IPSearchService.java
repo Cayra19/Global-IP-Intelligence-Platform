@@ -3,6 +3,8 @@ package com.example.demo.ip.service;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
@@ -95,9 +97,13 @@ public class IPSearchService {
         // SAFE CACHE
         Set<String> appNumbers = results.stream()
                 .map(IPSearchResultDTO::getApplicationNumber)
+                .filter(num -> num != null)
                 .collect(Collectors.toSet());
 
         List<IPAsset> existingAssets = repository.findByApplicationNumberIn(appNumbers);
+
+        Map<String, IPAsset> existingMap = existingAssets.stream()
+                .collect(Collectors.toMap(IPAsset::getApplicationNumber, a -> a));
 
         Set<String> existingNumbers = existingAssets.stream()
                 .map(IPAsset::getApplicationNumber)
@@ -125,10 +131,7 @@ public class IPSearchService {
                 }
 
             } else {
-                IPAsset existing = existingAssets.stream()
-                        .filter(a -> a.getApplicationNumber().equals(dto.getApplicationNumber()))
-                        .findFirst()
-                        .orElse(null);
+                IPAsset existing = existingMap.get(dto.getApplicationNumber());
 
                 if (existing != null) {
                     dto.setId(existing.getId());
