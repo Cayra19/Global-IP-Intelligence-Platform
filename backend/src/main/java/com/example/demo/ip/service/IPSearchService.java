@@ -3,9 +3,6 @@ package com.example.demo.ip.service;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -96,50 +93,40 @@ public class IPSearchService {
         }
 
         // SAFE CACHE
-        Set<String> appNumbers = results.stream()
-                .map(IPSearchResultDTO::getApplicationNumber)
-                .filter(num -> num != null)
-                .collect(Collectors.toSet());
-
-        List<IPAsset> existingAssets = repository.findByApplicationNumberIn(appNumbers);
-
-        Map<String, IPAsset> existingMap = existingAssets.stream()
-                .collect(Collectors.toMap(IPAsset::getApplicationNumber, a -> a));
-
-        Set<String> existingNumbers = existingAssets.stream()
-                .map(IPAsset::getApplicationNumber)
-                .collect(Collectors.toSet());
 
         for (IPSearchResultDTO dto : results) {
 
             if (dto.getApplicationNumber() == null) {
                 continue;
             }
+            IPAsset existing = repository
+                    .findByApplicationNumber(dto.getApplicationNumber())
+                    .orElse(null);
 
-            if (!existingNumbers.contains(dto.getApplicationNumber())) {
-
+            if (existing != null) {
+                dto.setId(existing.getId());
+            } else {
                 try {
                     IPAsset saved = repository.save(mapToEntity(dto));
-
                     dto.setId(saved.getId());
                     dto.setLegalStatus(saved.getLegalStatus());
                     dto.setUpdatedOn(saved.getUpdatedOn() != null
                             ? saved.getUpdatedOn().toString()
                             : null);
+                } catch (DataIntegrityViolationException e) {
+                    // Another request inserted it concurrently
+                    IPAsset alreadySaved = repository
+                            .findByApplicationNumber(dto.getApplicationNumber())
+                            .orElse(null);
 
-                } catch (org.springframework.dao.DataIntegrityViolationException e) {
-                    log.debug("Patent already exists: {}", dto.getApplicationNumber());
-                }
+                    if (alreadySaved != null) {
+                        dto.setId(alreadySaved.getId());
+                    }
 
-            } else {
-                IPAsset existing = existingMap.get(dto.getApplicationNumber());
-
-                if (existing != null) {
-                    dto.setId(existing.getId());
+                    log.debug("Patent already inserted concurrently: {}", dto.getApplicationNumber());
                 }
             }
         }
-
         return results;
     }
 

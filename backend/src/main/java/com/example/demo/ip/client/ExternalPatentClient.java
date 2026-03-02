@@ -169,7 +169,7 @@ public class ExternalPatentClient {
         dto.setApplicationNumber(
                 patent.get("application_number") != null
                         ? patent.get("application_number").toString()
-                        : publicationNumber != null ? publicationNumber : "UNKNOWN");
+                        : publicationNumber != null ? publicationNumber : null);
 
         dto.setAssetType("PATENT");
         dto.setCountry(extractCountryFromPublication(publicationNumber));
