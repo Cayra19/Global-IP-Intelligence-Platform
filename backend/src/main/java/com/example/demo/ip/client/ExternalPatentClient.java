@@ -93,11 +93,11 @@ public class ExternalPatentClient {
      * SEARCH (NO PAGINATION)
      * =======================
      */
-    @Cacheable(value = "patent-search", key = "#query + '-' + #limit")
+    @Cacheable(value = "patent-search", key = "#query + '-' + #limit + '-' + #start")
     public List<IPSearchResultDTO> searchPatents(String query, int limit, int start) {
 
         if (apiKey == null || apiKey.isBlank()) {
-            log.error("SerpAPI key not configured");
+            log.error("SERPAPI KEY MISSING");
             return Collections.emptyList();
         }
 
@@ -118,7 +118,18 @@ public class ExternalPatentClient {
                     });
 
             Map<String, Object> response = resp.getBody();
-            if (response == null || !response.containsKey("organic_results")) {
+            if (response == null) {
+                log.error("SerpAPI returned null response");
+                return Collections.emptyList();
+            }
+
+            if (response.containsKey("error")) {
+                log.error("SerpAPI ERROR: {}", response.get("error"));
+                return Collections.emptyList();
+            }
+
+            if (!response.containsKey("organic_results")) {
+                log.warn("SerpAPI response missing organic_results. Keys: {}", response.keySet());
                 return Collections.emptyList();
             }
 
