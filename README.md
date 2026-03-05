@@ -1,9 +1,11 @@
 # 🌍 Global IP Intelligence Platform
 
+## 🌐 Live Application
+[Open Live Demo](https://global-ip-intelligence-platform.onrender.com)
+
 A React-based analytics dashboard platform engineered to centralize, monitor, and visualize global patent data across jurisdictions, backed by secure Spring Boot APIs.
 
 This project was developed as part of the Infosys Springboard Internship Program.
-
 
 Built using **Spring Boot, PostgreSQL, and React**, this platform delivers structured patent insights, legal status tracking, filing analytics, and secure role-based dashboards for users and administrators.
 
