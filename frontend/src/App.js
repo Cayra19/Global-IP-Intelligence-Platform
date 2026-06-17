@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { SubscriptionProvider } from "./context/SubscriptionContext";
 import { AdminUIProvider } from "./admin/context/AdminUIContext";
+import { PrivateRoute, AdminPrivateRoute } from "./components/PrivateRoute";
 import LandingPage from "./components/LandingPage";
 import Login from "./components/Login";
 import Register from "./components/Register";
@@ -43,44 +44,45 @@ function App() {
       <AdminUIProvider>
         <div className="App">
           <Routes>
+            {/* Public routes */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/users" element={<AdminUserManagement />} />
-            <Route path="/admin/filings" element={<AdminFilingsManagement />} />
-            <Route path="/admin/filings/:id" element={<AdminFilingDetail />} />
-            <Route path="/admin/monitoring" element={<AdminMonitoring />} />
-            <Route path="/admin/finance" element={<AdminFinanceManagement />} />
-            <Route path="/admin/settings" element={<AdminSettings />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/ipActivity" element={<IPActivity />} />
-
-            <Route path="/filing-tracker-dashboard" element={<ProtectedFilingTracker><FilingTrackerDashboard /></ProtectedFilingTracker>} />
-            <Route path="/filing-list" element={<ProtectedFilingTracker><FilingList /></ProtectedFilingTracker>} />
-            <Route path="/filing-detail/:id" element={<ProtectedFilingTracker><FilingDetail /></ProtectedFilingTracker>} />
-
-            {/* Patent filing routes (legacy and new wizard) */}
-            <Route path="/patent-filing" element={<PatentFiling />} />
-            <Route path="/file-patent" element={<PatentFilingWizard />} />
-            <Route path="/my-filings" element={<MyFilings />} />
-            <Route path="/my-filings/:id" element={<MyFilingDetail />} />
-
+            <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/pricing" element={<PricingPage />} />
-            <Route path="/checkout/:planKey" element={<CheckoutPage />} />
-            <Route path="/subscription-status" element={<SubscriptionStatus />} />
             <Route path="/help" element={<HelpCenter />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
-            <Route path="/settings" element={<Settings />} />
             <Route path="/feedback" element={<Feedback />} />
-            <Route path="/ip-search" element={<IPSearch />} />
-            <Route path="/search-results" element={<SearchResults />} />
-            <Route path="/ip/:id" element={<IPDetails />} />
-            <Route path="/legal-status" element={<LegalStatusDashboard />} />
 
+            {/* Admin protected routes */}
+            <Route path="/admin/dashboard" element={<AdminPrivateRoute><AdminDashboard /></AdminPrivateRoute>} />
+            <Route path="/admin/users" element={<AdminPrivateRoute><AdminUserManagement /></AdminPrivateRoute>} />
+            <Route path="/admin/filings" element={<AdminPrivateRoute><AdminFilingsManagement /></AdminPrivateRoute>} />
+            <Route path="/admin/filings/:id" element={<AdminPrivateRoute><AdminFilingDetail /></AdminPrivateRoute>} />
+            <Route path="/admin/monitoring" element={<AdminPrivateRoute><AdminMonitoring /></AdminPrivateRoute>} />
+            <Route path="/admin/finance" element={<AdminPrivateRoute><AdminFinanceManagement /></AdminPrivateRoute>} />
+            <Route path="/admin/settings" element={<AdminPrivateRoute><AdminSettings /></AdminPrivateRoute>} />
+
+            {/* User protected routes */}
+            <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+            <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+            <Route path="/ipActivity" element={<PrivateRoute><IPActivity /></PrivateRoute>} />
+            <Route path="/ip-search" element={<PrivateRoute><IPSearch /></PrivateRoute>} />
+            <Route path="/search-results" element={<PrivateRoute><SearchResults /></PrivateRoute>} />
+            <Route path="/ip/:id" element={<PrivateRoute><IPDetails /></PrivateRoute>} />
+            <Route path="/legal-status" element={<PrivateRoute><LegalStatusDashboard /></PrivateRoute>} />
+            <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
+            <Route path="/patent-filing" element={<PrivateRoute><PatentFiling /></PrivateRoute>} />
+            <Route path="/file-patent" element={<PrivateRoute><PatentFilingWizard /></PrivateRoute>} />
+            <Route path="/my-filings" element={<PrivateRoute><MyFilings /></PrivateRoute>} />
+            <Route path="/my-filings/:id" element={<PrivateRoute><MyFilingDetail /></PrivateRoute>} />
+            <Route path="/checkout/:planKey" element={<PrivateRoute><CheckoutPage /></PrivateRoute>} />
+            <Route path="/subscription-status" element={<PrivateRoute><SubscriptionStatus /></PrivateRoute>} />
+
+            <Route path="/filing-tracker-dashboard" element={<PrivateRoute><ProtectedFilingTracker><FilingTrackerDashboard /></ProtectedFilingTracker></PrivateRoute>} />
+            <Route path="/filing-list" element={<PrivateRoute><ProtectedFilingTracker><FilingList /></ProtectedFilingTracker></PrivateRoute>} />
+            <Route path="/filing-detail/:id" element={<PrivateRoute><ProtectedFilingTracker><FilingDetail /></ProtectedFilingTracker></PrivateRoute>} />
           </Routes>
         </div>
       </AdminUIProvider>
