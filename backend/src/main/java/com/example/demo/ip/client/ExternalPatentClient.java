@@ -27,7 +27,7 @@ public class ExternalPatentClient {
 
     private final RestTemplate restTemplate;
 
-    @Value("${SERPAPI_KEY}")
+    @Value("${serpapi.key}")
     private String apiKey;
 
     /*
