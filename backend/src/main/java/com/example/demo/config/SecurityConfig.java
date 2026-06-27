@@ -41,10 +41,22 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/**",
-                                "/auth/**",
-                                "/h2-console/**")
+                                "/api/auth/**",
+                                "/api/ip/search",
+                                "/h2-console/**",
+                                "/",
+                                "/index.html",
+                                "/static/**",
+                                "/asset-manifest.json",
+                                "/favicon.ico",
+                                "/manifest.json")
                         .permitAll()
+                        .requestMatchers(
+                                "/api/admin/**")
+                        .hasRole("ADMIN")
+                        .requestMatchers(
+                                "/api/**")
+                        .authenticated()
                         .anyRequest().permitAll())
 
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

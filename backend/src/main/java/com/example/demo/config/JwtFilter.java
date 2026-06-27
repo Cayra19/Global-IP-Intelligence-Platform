@@ -4,7 +4,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,10 +24,9 @@ public class JwtFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
 
-        return path.startsWith("/auth")
+        return !path.startsWith("/api/")
+                || path.startsWith("/api/auth")
                 || path.equals("/api/ip/search")
-                || path.startsWith("/h2-console")
-                || path.startsWith("/api/admin/monitoring")
                 || "OPTIONS".equalsIgnoreCase(request.getMethod());
     }
 
@@ -37,20 +35,6 @@ public class JwtFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain)
             throws ServletException, IOException {
-
-
-        String path = request.getRequestURI();
-
-        // ✅ SKIP JWT FOR PUBLIC ENDPOINTS
-        if (path.startsWith("/auth")
-                || path.equals("/api/ip/search")
-                || path.startsWith("/h2-console")
-                || path.startsWith("/api/admin/monitoring")
-                || "OPTIONS".equalsIgnoreCase(request.getMethod())) {
-
-            filterChain.doFilter(request, response);
-            return; // 🔥 CRITICAL
-        }
 
         String header = request.getHeader("Authorization");
         String token = null;
@@ -63,7 +47,7 @@ public class JwtFilter extends OncePerRequestFilter {
             }
 
             if (email != null &&
-                SecurityContextHolder.getContext().getAuthentication() == null) {
+                    SecurityContextHolder.getContext().getAuthentication() == null) {
 
                 UserDetails userDetails =
                         userDetailsService.loadUserByUsername(email);
