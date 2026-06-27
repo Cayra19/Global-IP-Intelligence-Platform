@@ -1,6 +1,5 @@
 export const logout = () => {
-  // Clear tokens, sessions, etc.
-  localStorage.removeItem("authToken");
+  localStorage.removeItem("token");
+  localStorage.removeItem("adminToken");
   sessionStorage.clear();
-  console.log("User logged out");
 };
